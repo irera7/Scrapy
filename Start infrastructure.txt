@@ -1,0 +1,44 @@
+# 1. Start infrastructure
+docker-compose up -d postgres redis minio
+
+# 2. Backend
+cd backend
+python -m venv venv
+.\venv\Scripts\activate
+pip install -r requirements.txt
+
+# Use run.py to start the server
+$env:PORT="8099"
+python run.py
+
+# NOTE: On Windows + Python 3.14+, --reload is auto-disabled for Playwright compatibility
+
+# 3. Celery Worker (new terminal - REQUIRED for job execution!)
+cd backend
+.\venv\Scripts\activate
+celery -A app.workers.celery_app worker --loglevel=info --pool=solo -Q scraping,exports,processing,celery
+
+# NOTE: --pool=solo is required on Windows
+# Without Celery worker, jobs will stay in "queued" status forever!
+
+# 4. Frontend
+cd frontend
+npm install
+npm run dev
+
+
+
+# مشاهده لاگ nginx
+docker logs ai_collector_nginx
+
+# ریستارت nginx
+docker restart ai_collector_nginx
+
+# توقف nginx
+docker stop ai_collector_nginx
+
+
+MinIO Console
+URL: http://localhost:9000 or http://localhost:9001
+Login: minioadmin / minioadmin123
+Navigate to bucket: ai-collector → projects → {your-project-id} → audios
