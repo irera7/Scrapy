@@ -1,2 +1,0 @@
-# AI Data Collector Backend
-
